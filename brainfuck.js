@@ -284,15 +284,12 @@ function update_memview(){
 	}
 
 	var line_2 = '';
+    var line_3 = '';
 	for(var i=0; i<pre_slots; i++){
 		line_2 += '    ';
+        line_3 += '    ';
 	}
 	line_2 += '^';
-
-	var line_3 = '';
-	for(var i=0; i<pre_slots; i++){
-		line_3 += '    ';
-	}
 	line_3 += 'mp='+g_mp;
 
 	var line_4 = '';
@@ -498,7 +495,7 @@ function combine_char(pos, neg, code) {
 }
         
 function optimise_code(code){
-    code = code.replaceAll('[-]','%');
+    code = code.replaceAll('[-]','%').replaceAll('[]','').replaceAll(' ','').replaceAll('\n','').replaceAll('\r','');
     // remove useless +- and <> combinations
     code = code.replace(/[\+\-]*(?:\+-|-\+)[\+\-]*/g,combine_char.bind(this, "+", "-"));
     code = code.replace(/[<>]*(?:<>|><)[<>]*/g,combine_char.bind(this, "<", ">"));
