@@ -10,17 +10,18 @@
 // #97   decimal char index
 // !141  octal char index
 // $61   hex char index
-
+var valid_ops = ['>','<','+','-','.',',','[',']',')','(','@','$','=','_','}','{','|','^','&']
 var g_debugging = 0;
-var g_memory = Array();
+var g_memory = [];
+var g_stack = [];
 var g_max_mem = 256;
 var g_max_val = 255;
 var g_ip = 0;
 var g_mp = 0;
 var g_dp = 0;
-var g_program = new Array();
-var g_targets = new Array();
-var g_input = new Array();
+var g_program = [];
+var g_targets = [];
+var g_input = [];
 var g_output = '';
 var g_viewer_width = 60;
 var g_quit_debug_run = 0;
@@ -47,6 +48,7 @@ function init(){
 function init_memory(){
 	for(var i=0; i<=g_max_mem; i++){
 		g_memory[i] = 0;
+        g_stack[i] = 0;
 	}
 	g_mp = 0;
 }
@@ -62,9 +64,9 @@ function init_prog(code){
 		var op = code.charAt(i)
 		// check it's not a carriage return or anything that will
 		//  break the program viewer too badly :)
-		if (is_valid_op(op)){
+		if (valid_ops.includes(op)){
 			g_program[g_program.length] = op;
-		}
+        }
 	}	
 	g_ip = 0;
 	init_targets();
@@ -72,7 +74,7 @@ function init_prog(code){
 
 function init_targets(){
 	g_targets.length = 0;
-	var temp_stack = new Array();
+	var temp_stack = [];
 	for(var i=0; i<g_program.length; i++){
 		var op = g_program[i];
 		if (op == '['){
@@ -119,19 +121,6 @@ function get_input(){
 	}
 }
 
-function is_valid_op(op){
-	if (op == '+') return 1;
-	if (op == '-') return 1;
-	if (op == '>') return 1;
-	if (op == '<') return 1;
-	if (op == '[') return 1;
-	if (op == ']') return 1;
-	if (op == '.') return 1;
-	if (op == ',') return 1;
-	if (op == '#') return 1;
-	return 0;
-}
-
 function put_output(c){
 	g_output += c;
 }
@@ -166,6 +155,39 @@ function execute_opcode(op){
 		case ',':
 			g_memory[g_mp] = get_input();
 			break;
+        case ')':
+            g_stack.push(g_memory[g_mp]);
+            break;
+        case '(':
+            g_memory[g_mp] = g_stack.pop();
+            break;
+        case '@':
+            g_memory[g_mp] = g_stack[g_stack.length-1];
+            break;
+        case '$':
+            g_stack.pop();
+            break;
+        case '=':
+            g_memory[g_mp] += g_stack[g_stack.length-1];
+            break;
+        case '_':
+            g_memory[g_mp] -= g_stack[g_stack.length-1];
+            break;
+        case '}':
+            g_memory[g_mp] >>= g_stack[g_stack.length-1]
+            break;
+        case '{':
+            g_memory[g_mp] <<= g_stack[g_stack.length-1]
+            break;
+        case '|':
+            g_memory[g_mp] |= g_stack[g_stack.length-1];
+            break;
+        case '^':
+            g_memory[g_mp] ^= g_stack[g_stack.length-1];
+            break;
+        case '&':
+            g_memory[g_mp] &= g_stack[g_stack.length-1];
+            break;
 	}
 }
 
@@ -229,7 +251,10 @@ function bf_run_step(){
 
 	window.setTimeout('bf_run_step();', 0);
 }
+function update_stackview(){
 
+
+}
 function update_memview(){
 	var mem_slots = Math.floor(g_viewer_width / 4);
 	var pre_slots = Math.floor(mem_slots / 2);
