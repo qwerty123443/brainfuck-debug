@@ -42,9 +42,12 @@ function init(){
 function init_memory(){
 	for(var i=0; i<=g_max_mem; i++){
 		g_memory[i] = 0;
-        g_stack[i] = 0;
 	}
 	g_mp = 0;
+}
+
+function init_stack() {
+    g_stack.length = 0
 }
 
 function init_io(){
@@ -200,9 +203,9 @@ function bf_interpret(prog, input){
 	}
 	g_running = 1;
     
-    prog = optimise_code(prog);
-	init_prog(prog);
+	init_prog(optimise_code(prog));
 	init_memory();
+    init_stack();
 	init_io();
 	init_input();
 
@@ -254,8 +257,17 @@ function bf_run_step(){
 	window.setTimeout('bf_run_step();', 0);
 }
 function update_stackview(){
+	var mem_slots = g_stack.length;
 
-
+	var line_1 = '';
+	for(var i=mem_slots; i>0; i--){
+        var stackval = g_stack[i-1];
+        if(stackval != 0){
+            var label = pad_num(stackval, 3);
+            line_1 += label + ' ';
+        }
+    }
+	set_viewdata('stackview', line_1 + g_linebreaker + '^');
 }
 function update_memview(){
 	var mem_slots = Math.floor(g_viewer_width / 4);
@@ -399,12 +411,13 @@ function debug_toggle(f){
 }
 
 function start_debugger(){
-    prog = optimise_code(document.getElementById('edit_source').value);
 	init_memory();
+    init_stack();
 	init_io();
-	init_prog(prog);
+	init_prog(optimise_code(document.getElementById('edit_source').value));
 	init_input();
 	update_memview();
+    update_stackview();
 	update_progview();
 	update_inputview();
 	update_outputview();
@@ -415,6 +428,7 @@ function run_step(){
 	execute_opcode(op);
 	g_ip++;
 	update_memview();
+    update_stackview();
 	update_progview();
 	update_inputview();
 	update_outputview();
@@ -461,26 +475,6 @@ function run_debug_step(){
 	window.setTimeout('run_debug_step();', 0);
 }
 
-function letterCount(str) {
-  var counts = {};
-  for (var i = 0, prevChar = null; i < str.length; i++) {
-    var char = str.charAt(i);
-    if(counts.hasOwnProperty(char) && char === prevChar) {
-      counts[char] = counts[char] + 1;  
-    } else if (!counts.hasOwnProperty(char)) {
-      counts[char] = 0;
-    }
-    prevChar = char;
-  }
-  var res = [];
-  for (var char in counts) {
-    if (counts.hasOwnProperty(char)) {
-      res.push([char,counts[char]);
-    }
-  }
-  return res;
-}
-
 function combine_char(pos, neg, code) {
     var sum = 0;
 
@@ -504,12 +498,7 @@ function combine_char(pos, neg, code) {
 }
         
 function optimise_code(code){
-    var stop = false;
-    var begindex = 0;
-    var endindex = 0;
     code = code.replaceAll('[-]','%');
-    codearray = letterCount(code);
-    print(codearray);
     // remove useless +- and <> combinations
     code = code.replace(/[\+\-]*(?:\+-|-\+)[\+\-]*/g,combine_char.bind(this, "+", "-"));
     code = code.replace(/[<>]*(?:<>|><)[<>]*/g,combine_char.bind(this, "<", ">"));
