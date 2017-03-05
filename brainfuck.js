@@ -303,7 +303,7 @@ function update_explanation(){
         set_viewdata('explanation', 'End of program');
         return
     }
-    for (var j = 0; j<i.length; j+=2){
+    for (var j = 0; j<g_documentation.length; j+=2){
         if (g_documentation[j] == currentop){
             set_viewdata('explanation', g_documentation[j+1]);
             return;
