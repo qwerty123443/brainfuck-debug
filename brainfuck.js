@@ -25,17 +25,17 @@ var g_running = 0;
 var g_linebreaker = "\n";
 
 var g_documentation = [
-    '>','Point to the next cell on the right.',
-    '<','Point to the next cell on the left.',
-    '+','Increment the byte at the pointer by one.',
-    '-','Decrement the byte at the pointer by one.',
-    '.','Output the value of the byte at the pointer.',
-    ',','Accept one byte of input, storing its value in the current cell.',
+    '>','Point to the next cell on the right.\n',
+    '<','Point to the next cell on the left.\n',
+    '+','Increment the byte at the pointer by one.\n',
+    '-','Decrement the byte at the pointer by one.\n',
+    '.','Output the value of the byte at the pointer.\n',
+    ',','Accept one byte of input, storing its value in the current cell.\n',
     '[','Jump forward to the command after the corresponding ]\nif the byte at the pointer is zero.',
     ']','Jump back to the command after the corresponding [\nif the byte at the pointer is nonzero.',
-    ')','Push the value at the current cell onto the stack',
+    ')','Push the value at the current cell onto the stack.\n',
     '(','Pop the value on the stack into the current cell\n(an empty stack pops zero into the cell)',
-    '@','Copy value at the top of the stack into the current cell without popping it',
+    '@','Copy value at the top of the stack into the current cell without popping it\n',
     '$','Drop the value on the stack (as if it was popped), but do not\n write it to the cell',
     '=','Current cell is set to the SUM between its value and the value on\nthe top of the stack (peek)',
     '_','current cell is set to the DIFFERENCE between its value and the\nvalue on the top of the stack (peek)',
@@ -44,8 +44,8 @@ var g_documentation = [
     '|','Set current cell to the bitwise OR between its value and the\nvalue on the top of the stack (peek)',
     '^','Set current cell to the bitwise XOR between its value and the\nvalue on the top of the stack (peek)',
     '&','Set current cell to the bitwise AND between its value and the\nvalue on the top of the stack (peek) ',
-    '#','Stop executing until button is clicked',
-    '%','Clear current cell. (optimised version of \'[-]\')'
+    '#','Stop executing until button is clicked\n',
+    '%','Clear current cell. (optimised version of \'[-]\')\n'
 ]
 
 function init(){
@@ -131,13 +131,13 @@ function get_input(){
         var data = window.prompt("Enter an input character (use #xxx to specify a decimal code, !xxx for an octal code, or $xxx for a hex code):", "#0");
         if ((data == null) || (!data)) return 0;
         if (data.charAt(0) == '#'){
-            return parseInt(data.substr(1), 10);
+            return data.substr(1).toString(10);
         }
         if (data.charAt(0) == '!'){
-            return eval('0'+data.substr(1));
+            return data.substr(1).toString(8);
         }
         if (data.charAt(0) == '$'){
-            return eval('0x'+data.substr(1));
+            return data.substr(1).toString(16);
         }
         return data.charCodeAt(0);
     }else{
@@ -541,7 +541,7 @@ function combine_char(pos, neg, code) {
 }
         
 function optimise_code(code){
-    code = code.replaceAll('[-]','%').replaceAll('[]','').replaceAll(' ','').replaceAll('\n','').replaceAll('\r','');
+    code = code.replaceAll('[-]','%').replaceAll('[]','').replaceAll(' ','').replaceAll('\n','').replaceAll('\r','');
     // remove useless +- and <> combinations
     code = code.replace(/[\+\-]*(?:\+-|-\+)[\+\-]*/g,combine_char.bind(this, "+", "-"));
     code = code.replace(/[<>]*(?:<>|><)[<>]*/g,combine_char.bind(this, "<", ">"));
