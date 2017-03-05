@@ -24,6 +24,30 @@ var g_prompt_for_input = 0;
 var g_running = 0;
 var g_linebreaker = "\n";
 
+var g_documentation = [
+    '>','Point to the next cell on the right.',
+    '<','Point to the next cell on the left.',
+    '+','Increment the byte at the pointer by one.',
+    '-','Decrement the byte at the pointer by one.',
+    '.','Output the value of the byte at the pointer.',
+    ',','Accept one byte of input, storing its value in the current cell.',
+    '[','Jump forward to the command after the corresponding ]\nif the byte at the pointer is zero.',
+    ']','Jump back to the command after the corresponding [\nif the byte at the pointer is nonzero.',
+    ')','Push the value at the current cell onto the stack',
+    '(','Pop the value on the stack into the current cell\n(an empty stack pops zero into the cell)',
+    '@','Copy value at the top of the stack into the current cell without popping it',
+    '$','Drop the value on the stack (as if it was popped), but do not\n write it to the cell',
+    '=','Current cell is set to the SUM between its value and the value on\nthe top of the stack (peek)',
+    '_','current cell is set to the DIFFERENCE between its value and the\nvalue on the top of the stack (peek)',
+    '}','Bitshift the current cell value right by the value on the top of\n the stack (peek)',
+    '{','Bitshift the current cell value left by the value on the top of\nthe stack (peek)',
+    '|','Set current cell to the bitwise OR between its value and the\nvalue on the top of the stack (peek)',
+    '^','Set current cell to the bitwise XOR between its value and the\nvalue on the top of the stack (peek)',
+    '&','Set current cell to the bitwise AND between its value and the\nvalue on the top of the stack (peek) ',
+    '#','Stop executing until button is clicked',
+    '%','Clear current cell. (optimised version of \'[-]\')'
+]
+
 function init(){
     if (navigator.userAgent.toLowerCase().indexOf("msie") != -1){
         g_linebreaker = "\r";
@@ -274,36 +298,14 @@ function update_stackview(){
 }
 
 function update_explanation(){
-    var i = [
-    '>','Point to the next cell on the right.',
-    '<','Point to the next cell on the left.',
-    '+','Increment the byte at the pointer by one.',
-    '-','Decrement the byte at the pointer by one.',
-    '.','Output the value of the byte at the pointer.',
-    ',','Accept one byte of input, storing its value in the current cell.',
-    '[','Jump forward to the command after the corresponding ] \nif the byte at the pointer is zero.',
-    ']','Jump back to the command after the corresponding [ \nif the byte at the pointer is nonzero.',
-    ')','Push the value at the current cell onto the stack',
-    '(','Pop the value on the stack into the current cell\n(an empty stack pops zero into the cell)',
-    '@','Copy value at the top of the stack into the current cell without popping it',
-    '$','Drop the value on the stack (as if it was popped), but do not\n write it to the cell',
-    '=','Current cell is set to the SUM between its value and the value on\nthe top of the stack (peek)',
-    '_','current cell is set to the DIFFERENCE between its value and the\nvalue on the top of the stack (peek)',
-    '}','Bitshift the current cell value right by the value on the top of\n the stack (peek)',
-    '{','Bitshift the current cell value left by the value on the top of\nthe stack (peek)',
-    '|','Set current cell to the bitwise OR between its value and the\nvalue on the top of the stack (peek)',
-    '^','Set current cell to the bitwise XOR between its value and the\nvalue on the top of the stack (peek)',
-    '&','Set current cell to the bitwise AND between its value and the\nvalue on the top of the stack (peek) ',
-    '#','Stop executing until button is clicked'
-    ]
     var currentop = g_program[g_ip];
     if (currentop == undefined){
         set_viewdata('explanation', 'End of program');
         return
     }
     for (var j = 0; j<i.length; j+=2){
-        if (i[j] == currentop){
-            set_viewdata('explanation', i[j+1]);
+        if (g_documentation[j] == currentop){
+            set_viewdata('explanation', g_documentation[j+1]);
             return;
         }
     }
