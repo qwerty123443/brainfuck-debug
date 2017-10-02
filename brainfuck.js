@@ -11,7 +11,7 @@ var g_stack = [];
 var g_max_mem = 256;
 var g_max_val = 255;
 var g_ip = 0;
-var g_mp = 0;
+var g_mempointer = 0;
 var g_dp = 0;
 var g_program = [];
 var g_targets = [];
@@ -25,17 +25,17 @@ var g_running = 0;
 var g_linebreaker = "\n";
 
 var g_documentation = [
-    '>','Point to the next cell on the right.\n',
-    '<','Point to the next cell on the left.\n',
-    '+','Increment the byte at the pointer by one.\n',
-    '-','Decrement the byte at the pointer by one.\n',
-    '.','Output the value of the byte at the pointer.\n',
-    ',','Accept one byte of input, storing its value in the current cell.\n',
+    '>','Point to the next cell on the right.\n',
+    '<','Point to the next cell on the left.\n',
+    '+','Increment the byte at the pointer by one.\n',
+    '-','Decrement the byte at the pointer by one.\n',
+    '.','Output the value of the byte at the pointer.\n',
+    ',','Accept one byte of input, storing its value in the current cell.\n',
     '[','Jump forward to the command after the corresponding ]\nif the byte at the pointer is zero.',
     ']','Jump back to the command after the corresponding [\nif the byte at the pointer is nonzero.',
-    ')','Push the value at the current cell onto the stack.\n',
+    ')','Push the value at the current cell onto the stack.\n',
     '(','Pop the value on the stack into the current cell\n(an empty stack pops zero into the cell)',
-    '@','Copy value at the top of the stack into the current cell without popping it\n',
+    '@','Copy value at the top of the stack into the current cell without popping it\n',
     '$','Drop the value on the stack (as if it was popped), but do not\n write it to the cell',
     '=','Current cell is set to the SUM between its value and the value on\nthe top of the stack (peek)',
     '_','current cell is set to the DIFFERENCE between its value and the\nvalue on the top of the stack (peek)',
@@ -44,8 +44,8 @@ var g_documentation = [
     '|','Set current cell to the bitwise OR between its value and the\nvalue on the top of the stack (peek)',
     '^','Set current cell to the bitwise XOR between its value and the\nvalue on the top of the stack (peek)',
     '&','Set current cell to the bitwise AND between its value and the\nvalue on the top of the stack (peek) ',
-    '#','Stop executing until button is clicked\n',
-    '%','Clear current cell. (optimised version of \'[-]\')\n'
+    '#','Stop executing until button is clicked\n',
+    '%','Clear current cell. (optimised version of \'[-]\')\n'
 ]
 
 function init(){
@@ -67,7 +67,7 @@ function init_memory(){
     for(var i=0; i<=g_max_mem; i++){
         g_memory[i] = 0;
     }
-    g_mp = 0;
+    g_mempointer = 0;
 }
 
 function init_stack() {
@@ -131,13 +131,13 @@ function get_input(){
         var data = window.prompt("Enter an input character (use #xxx to specify a decimal code, !xxx for an octal code, or $xxx for a hex code):", "#0");
         if ((data == null) || (!data)) return 0;
         if (data.charAt(0) == '#'){
-            return data.substr(1).toString(10);
+            return parseInt(data.substr(1), 10);
         }
         if (data.charAt(0) == '!'){
-            return data.substr(1).toString(8);
+            return parseInt(data.substr(1), 8);
         }
         if (data.charAt(0) == '$'){
-            return data.substr(1).toString(16);
+            return parseInt(data.substr(1), 16);
         }
         return data.charCodeAt(0);
     }else{
@@ -154,69 +154,70 @@ function put_output(c){
 function execute_opcode(op){
     switch(op){
         case '+':
-            g_memory[g_mp]++;
-            if (g_memory[g_mp] > g_max_val) g_memory[g_mp] = 0;
+            g_memory[g_mempointer]++;
+            if (g_memory[g_mempointer] > g_max_val) g_memory[g_mempointer] = 0;
             break;
         case '-':
-            g_memory[g_mp]--;
-            if (g_memory[g_mp] < 0) g_memory[g_mp] = g_max_val;
+            g_memory[g_mempointer]--;
+            if (g_memory[g_mempointer] < 0) g_memory[g_mempointer] = g_max_val;
             break;
         case '>':
-            g_mp++;
-            if (g_mp >= g_max_mem) g_mp = 0;
+            g_mempointer++;
+            if (g_mempointer >= g_max_mem) g_mempointer = 0;
             break;
         case '<':
-            g_mp--;
-            if (g_mp < 0) g_mp = g_max_mem-1;
+            g_mempointer--;
+            if (g_mempointer < 0) g_mempointer = g_max_mem-1;
             break;
         case '[':
-            if (g_memory[g_mp] == 0) g_ip = g_targets[g_ip];
+            if (g_memory[g_mempointer] == 0) g_ip = g_targets[g_ip];
             break;
         case ']':
             g_ip = g_targets[g_ip] - 1;
             break;
         case '.':
-            put_output(String.fromCharCode(g_memory[g_mp]));
+            put_output(String.fromCharCode(g_memory[g_mempointer]));
             break;
         case ',':
-            g_memory[g_mp] = get_input();
+            g_memory[g_mempointer] = get_input();
             break;
         case ')':
-            g_stack.push(g_memory[g_mp]);
+            g_stack.push(g_memory[g_mempointer]);
             break;
         case '(':
-            g_memory[g_mp] = g_stack.pop();
+            g_memory[g_mempointer] = g_stack.pop();
             break;
         case '@':
-            g_memory[g_mp] = g_stack[g_stack.length-1];
+            g_memory[g_mempointer] = g_stack[g_stack.length-1];
             break;
         case '$':
             g_stack.pop();
             break;
         case '=':
-            g_memory[g_mp] += g_stack[g_stack.length-1];
+            g_memory[g_mempointer] += g_stack[g_stack.length-1];
             break;
         case '_':
-            g_memory[g_mp] -= g_stack[g_stack.length-1];
+            g_memory[g_mempointer] -= g_stack[g_stack.length-1];
             break;
         case '}':
-            g_memory[g_mp] >>= g_stack[g_stack.length-1]
+            g_memory[g_mempointer] >>= g_stack[g_stack.length-1]
             break;
         case '{':
-            g_memory[g_mp] <<= g_stack[g_stack.length-1]
+            g_memory[g_mempointer] <<= g_stack[g_stack.length-1]
             break;
         case '|':
-            g_memory[g_mp] |= g_stack[g_stack.length-1];
+            g_memory[g_mempointer] |= g_stack[g_stack.length-1];
             break;
         case '^':
-            g_memory[g_mp] ^= g_stack[g_stack.length-1];
+            g_memory[g_mempointer] ^= g_stack[g_stack.length-1];
             break;
         case '&':
-            g_memory[g_mp] &= g_stack[g_stack.length-1];
+            g_memory[g_mempointer] &= g_stack[g_stack.length-1];
             break;
         case '%':
-            g_memory[g_mp] = 0;
+            g_memory[g_mempointer] = 0;
     }
+    g_memory[g_mempointer] %= 256;
 }
 
 function bf_interpret(prog, input){
@@ -286,10 +287,7 @@ function update_stackview(){
     var line_1 = '';
     var line_2 = '';
     for(var i=mem_slots; i>0; i--){
-        var stackval = g_stack[i-1];
-        if(stackval != 0){
-            line_1 += pad_num(stackval, 3) + ' ';
-        }
+        line_1 += pad_num(g_stack[i-1], 3) + ' ';
     }
     if (line_1 != '') {
         line_2 = '^'
@@ -314,7 +312,7 @@ function update_explanation(){
 function update_memview(){
     var mem_slots = Math.floor(g_viewer_width / 4);
     var pre_slots = Math.floor(mem_slots / 2);
-    var low_slot = g_mp - pre_slots;
+    var low_slot = g_mempointer - pre_slots;
     if (low_slot < 0) low_slot += g_max_mem;
 
     var line_1 = '';
@@ -332,7 +330,7 @@ function update_memview(){
         line_3 += '    ';
     }
     line_2 += '^';
-    line_3 += 'mp='+g_mp;
+    line_3 += 'mp='+g_mempointer;
 
     var line_4 = '';
     for(var i=0; i<mem_slots; i++){
@@ -541,7 +539,7 @@ function combine_char(pos, neg, code) {
 }
         
 function optimise_code(code){
-    code = code.replaceAll('[-]','%').replaceAll('[]','').replaceAll(' ','').replaceAll('\n','').replaceAll('\r','');
+    code = code.replaceAll('[-]','%').replaceAll('[]','').replaceAll(' ','').replaceAll('\n','').replaceAll('\r','');
     // remove useless +- and <> combinations
     code = code.replace(/[\+\-]*(?:\+-|-\+)[\+\-]*/g,combine_char.bind(this, "+", "-"));
     code = code.replace(/[<>]*(?:<>|><)[<>]*/g,combine_char.bind(this, "<", ">"));
