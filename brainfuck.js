@@ -411,6 +411,7 @@ function run_debug_step(){
     while (g_program[g_ip] != '#' && !g_quit_debug_run && g_ip < g_program.length){
         run_step();
     }
+    g_ip++;
     enable_button('button_debug');
     enable_button('button_step');
     change_button_caption('button_run_debug', 'Run To Breakpoint (c)');

@@ -90,8 +90,11 @@
                     <br></td>
                     <td>
                         <br>
-                        <input id="button_run" onclick="bf_interpret(this.form.source.value, this.form.input.value);" type="button" value="Run"> <input id="button_debug" onclick="debug_toggle();" type="button" value="Start Debugger"> <input disabled id="button_step" onclick="run_step();" type="button" value="Single Step (n)"> <input disabled id="button_run_debug" onclick="run_debug();" type="button" value="Run To Breakpoint (c)"><br>
-                        <br>
+                        <input id="button_run" onclick="bf_interpret(this.form.source.value, this.form.input.value);" type="button" value="Run"> 
+                        <input id="button_debug" onclick="debug_toggle();" type="button" value="Start Debugger"> 
+                        <input disabled id="button_step" onclick="run_step();" type="button" value="Single Step (n)"> 
+                        <input disabled id="button_run_debug" onclick="run_debug();" type="button" value="Run To Breakpoint (c)">
+                        <br><br>
                         Source Viewer:<br>
                         <pre class="viewer" id="progview"> </pre><br>
                         Opcode Explanation:<br>
