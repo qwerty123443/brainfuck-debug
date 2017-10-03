@@ -1,135 +1,119 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Javascript Brainfuck Interpreter / Debugger</title>
-<script language="Javascript" src="brainfuck.js"></script>
-<style>
+    <title>Javascript Brainfuck Interpreter / Debugger</title>
+    <meta charset="UTF-8">
+    <script language="Javascript" src="brainfuck.js">
+    </script>
+    <style>
+        body {
+            margin: 0px;
+            background-color: #202020;
+            color: #fff;
+            font-family: Arial, Helvetica, Sans-serif;
+        }
 
-body {
-	margin: 0px;
-	background-color: #202020;
-	color: #fff;
-	font-family: Arial, Helvetica, Sans-serif;
-}
+        textarea.editsmall {
+            width: 400px;
+            height: 100px;
+            color:#fff;
+            background-color:#444;
+        }
 
-textarea.editsmall {
-	width: 400px;
-	height: 100px;
-    color:#fff;
-    background-color:#444;
-}
+        textarea.edit {
+            width: 400px;
+            height: 200px;
+            color:#fff;
+            background-color:#444;
+        }
 
-textarea.edit {
-	width: 400px;
-	height: 200px;
-    color:#fff;
-    background-color:#444;
-}
+        div.main {
+            padding: 6px;
+            border: 1px solid #000;
+            background-color: #444;
+        }
 
-div.main {
-	padding: 6px;
-	border: 1px solid #000;
-	background-color: #444;
-}
-
-pre.viewer {
-	width: 500px;
-	padding: 6px;
-	border: 1px solid #000;
-	background-color: #444;
-	margin: 0px;
-}
-
-</style>
+        pre.viewer {
+            width: 500px;
+            padding: 6px;
+            border: 1px solid #000;
+            background-color: #444;
+            margin: 0px;
+        }
+    </style>
 </head>
 <body onload="init();">
-
-<div id="page">
-
-<form name="mainform">
-
-<table cellspacing="20" cellpadding="0" border="0" align="center">
-	<tr valign="top">
-		<td colspan="2">
-			<h1>Javascript Brainfuck Interpreter / Debugger</h1>
-			<b>By <a href="http://www.iamcal.com/">Cal Henderson</a></b><br>
-			Source available on <a href="https://github.com/iamcal/brainfuck-debug">Github</a>
-			<br>
-			<hr>
-		</td>
-	</tr>
-	<tr valign="top">
-		<td>
-			Program:<br>
-			<select onchange="this.form.source.value=this.options[this.selectedIndex].value; this.selectedIndex=0;" id="edit_progs">
-				<option value="">Example programs...</option>
-				<option value="++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.">Hello World</option>
-                <option value="+>+++++)<{)>==+++.=---.$=++..+++.<.)>)>(<_$=+++.>.)+++.(---._---.<<+.">Hello World (Stacked Brainfuck)</option>
-                <option value="++++){)>+++)+{$=>+++){++[<<+.>+.>-]">Alphabet lower/uppercase (Stacked Brainfuck)</option>
-				<option value=",[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>++++++++++++++<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>>+++++[<----->-]<<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>++++++++++++++<-[>+<-[>+<-[>+<-[>+<-[>+<-[>++++++++++++++<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>>+++++[<----->-]<<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>++++++++++++++<-[>+<-]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]>.[-]<,]">Rot 13 (slow!)</option>
-				<option value="+++++++++++>+>>>>++++++++++++++++++++++++++++++++++++++++++++>++++++++++++++++++++++++++++++++<<<<<<[>[>>>>>>+>+<<<<<<<-]>>>>>>>[<<<<<<<+>>>>>>>-]<[>++++++++++[-<-[>>+>+<<<-]>>>[<<<+>>>-]+<[>[-]<[-]]>[<<[>>>+<<<-]>>[-]]<<]>>>[>>+>+<<<-]>>>[<<<+>>>-]+<[>[-]<[-]]>[<<+>>[-]]<<<<<<<]>>>>>[++++++++++++++++++++++++++++++++++++++++++++++++.[-]]++++++++++<[->-<]>++++++++++++++++++++++++++++++++++++++++++++++++.[-]<<<<<<<<<<<<[>>>+>+<<<<-]>>>>[<<<<+>>>>-]<-[>>.>.<<<[-]]<<[>>+>+<<<-]>>>[<<<+>>>-]<<[<+>-]>[<+>-]<<<-]">Fibonacci Numbers</option>
-				<option value="++++++++++++++++++++#++++++++++++++++++++#++++++++++++++++++++#++++++++++++++++++++#++++++++++++++++++++#-.--.+++++++++++.">Breakpoints Demo</option>
-            
-            </select><br>
-			<textarea id="edit_source" name="source" wrap="virtual" class="edit"></textarea><br>
-			<br>
-
-			Input:<br>
-			<input type="radio" id="input_mode_1" name="input_mode" value="1" onclick="sync_input();"> Prompt for input as needed<br>
-			<input type="radio" id="input_mode_2" name="input_mode" value="2" onclick="sync_input();" checked> Pre-supply input:<br>
-			<textarea id="edit_input" name="input" wrap="virtual" class="editsmall"></textarea><br>
-			<br>
-
-			Output:<br>
-			<textarea id="edit_output" name="output" wrap="virtual" class="editsmall"></textarea><br>
-			<br>
-		</td>
-		<td>
-			<br>
-			<input type="button" value="Run" onclick="bf_interpret(this.form.source.value, this.form.input.value);" id="button_run">
-			<input type="button" value="Start Debugger" onclick="debug_toggle();" id="button_debug">
-			<input type="button" value="Single Step (n)" onclick="run_step();" disabled id="button_step">
-			<input type="button" value="Run To Breakpoint (c)" onclick="run_debug();" disabled id="button_run_debug">
-			<br>
-			<br>
-
-			Source Viewer:<br>
-			<pre class="viewer" id="progview"> </pre>
-			<br>
-            
-            Opcode Explanation:<br>
-			<pre class="viewer" id="explanation"> </pre>
-			<br>
-
-			Memory Viewer:<br>
-			<pre class="viewer" id="memview"> </pre>
-			<br>
-
-			Stack Viewer:<br>
-			<pre class="viewer" id="stackview"> </pre>
-			<br>
-
-			Input Viewer:<br>
-			<pre class="viewer" id="inputview"> </pre>
-			<br>
-
-			Output Viewer:<br>
-			<pre class="viewer" id="outputview"> </pre>
-			<br>
-
-			<b>Note:</b> The hash ("#") character marks a breakpoint.
-		</td>
-	</tr>
-	<tr valign="top">
-		<td colspan="2">
-			Example programs taken from <a href="http://esoteric.sange.fi/brainfuck/">the Brainfuck Archive</a>
-		</td>
-	</tr>
-</table>
-
-</form>
-
-</div>
-
+    <div id="page">
+        <form id="mainform" name="mainform">
+            <table align="center" border="0" cellpadding="0" cellspacing="20">
+                <tr valign="top">
+                    <td colspan="2">
+                        <h1>Javascript Brainfuck Interpreter / Debugger</h1><b>By <a href="http://www.iamcal.com/">Cal Henderson</a></b><br>
+                        Source available on <a href="https://github.com/iamcal/brainfuck-debug">Github</a><br>
+                        <hr>
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <td>Program:<br>
+                    <select id="edit_progs" onchange="this.form.source.value=this.options[this.selectedIndex].value; this.selectedIndex=0;">
+                        <option value="">
+                            Example programs...
+                        </option>
+                        <option value="++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.">
+                            Hello World
+                        </option>
+                        <option value="+>+++++)<{)>==+++.=---.$=++..+++.<.)>)>(<_$=+++.>.)+++.(---._---.<<+.">
+                            Hello World (Stacked Brainfuck)
+                        </option>
+                        <option value="++++){)>+++)+{$=>+++){++[<<+.>+.>-]">
+                            Alphabet lower/uppercase (Stacked Brainfuck)
+                        </option>
+                        <option value=",[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>++++++++++++++<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>>+++++[<----->-]<<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>++++++++++++++<-[>+<-[>+<-[>+<-[>+<-[>+<-[>++++++++++++++<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>>+++++[<----->-]<<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-[>++++++++++++++<-[>+<-]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]>.[-]<,]">
+                            Rot 13 (slow!)
+                        </option>
+                        <option value="+++++++++++>+>>>>++++++++++++++++++++++++++++++++++++++++++++>++++++++++++++++++++++++++++++++<<<<<<[>[>>>>>>+>+<<<<<<<-]>>>>>>>[<<<<<<<+>>>>>>>-]<[>++++++++++[-<-[>>+>+<<<-]>>>[<<<+>>>-]+<[>[-]<[-]]>[<<[>>>+<<<-]>>[-]]<<]>>>[>>+>+<<<-]>>>[<<<+>>>-]+<[>[-]<[-]]>[<<+>>[-]]<<<<<<<]>>>>>[++++++++++++++++++++++++++++++++++++++++++++++++.[-]]++++++++++<[->-<]>++++++++++++++++++++++++++++++++++++++++++++++++.[-]<<<<<<<<<<<<[>>>+>+<<<<-]>>>>[<<<<+>>>>-]<-[>>.>.<<<[-]]<<[>>+>+<<<-]>>>[<<<+>>>-]<<[<+>-]>[<+>-]<<<-]">
+                            Fibonacci Numbers
+                        </option>
+                        <option value="++++++++++++++++++++#++++++++++++++++++++#++++++++++++++++++++#++++++++++++++++++++#++++++++++++++++++++#-.--.+++++++++++.">
+                            Breakpoints Demo
+                        </option>
+                    </select><br>
+                    <textarea class="edit" id="edit_source" name="source" wrap="virtual"></textarea><br>
+                    <br>
+                    Input:<br>
+                    <input id="input_mode_1" name="input_mode" onclick="sync_input();" type="radio" value="1"> Prompt for input as needed<br>
+                    <input checked id="input_mode_2" name="input_mode" onclick="sync_input();" type="radio" value="2"> Pre-supply input:<br>
+                    <textarea class="editsmall" id="edit_input" name="input" wrap="virtual"></textarea><br>
+                    <br>
+                    Output:<br>
+                    <textarea class="editsmall" id="edit_output" name="output" wrap="virtual"></textarea><br>
+                    <br></td>
+                    <td>
+                        <br>
+                        <input id="button_run" onclick="bf_interpret(this.form.source.value, this.form.input.value);" type="button" value="Run"> <input id="button_debug" onclick="debug_toggle();" type="button" value="Start Debugger"> <input disabled id="button_step" onclick="run_step();" type="button" value="Single Step (n)"> <input disabled id="button_run_debug" onclick="run_debug();" type="button" value="Run To Breakpoint (c)"><br>
+                        <br>
+                        Source Viewer:<br>
+                        <pre class="viewer" id="progview"> </pre><br>
+                        Opcode Explanation:<br>
+                        <pre class="viewer" id="explanation"> </pre><br>
+                        Memory Viewer:<br>
+                        <pre class="viewer" id="memview"> </pre><br>
+                        Stack Viewer:<br>
+                        <pre class="viewer" id="stackview"> </pre><br>
+                        Input Viewer:<br>
+                        <pre class="viewer" id="inputview"> </pre><br>
+                        Output Viewer:<br>
+                        <pre class="viewer" id="outputview"> </pre><br>
+                        <b>Note:</b> The hash ("#") character marks a breakpoint.
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <td colspan="2">
+                        Example programs taken from <a href="http://esoteric.sange.fi/brainfuck/">the Brainfuck Archive</a>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
 </body>
 </html>
