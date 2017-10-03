@@ -48,6 +48,9 @@ var g_documentation = [
 ];
 
 function init(){
+    disable_button('button_step');
+    disable_button('button_run_debug');
+    change_button_caption('button_run_debug', 'Run To Breakpoint (c)');
     document.addEventListener('keypress', function(e) {
         //n for single step
         if (e.keyCode == 110)
@@ -183,23 +186,14 @@ function bf_stop_run(){
 
     g_running = 0;
 }
-
 function bf_run_step(){
-    // execute instrcution under ip
-    var op = g_program[g_ip];
-
-    execute_opcode(op);
-
-    // increment ip
-    g_ip++;
-
-    if (g_ip >= g_program.length){
-        bf_stop_run();
-        document.getElementById('edit_output').value = g_output;
-        return;
+    while (g_ip > g_program.length){
+        execute_opcode(g_program[g_ip]);
+        g_ip++;
     }
-
-    window.setTimeout(bf_run_step(), 0);
+    bf_stop_run();
+    document.getElementById('edit_output').value = g_output;
+    return;
 }
 
 function set_viewdata(view, data){
@@ -414,15 +408,14 @@ function run_debug(){
 }
 
 function run_debug_step(){
-    run_step();
-    if ((g_program[g_ip] == '#') || g_quit_debug_run || g_ip >= g_program.length){
-        enable_button('button_debug');
-        enable_button('button_step');
-        change_button_caption('button_run_debug', 'Run To Breakpoint (c)');
-        g_debugging_running = 0;
-        return;
+    while (g_program[g_ip] != '#' && !g_quit_debug_run && g_ip < g_program.length){
+        run_step();
     }
-    window.setTimeout(run_debug_step(), 0);
+    enable_button('button_debug');
+    enable_button('button_step');
+    change_button_caption('button_run_debug', 'Run To Breakpoint (c)');
+    g_debugging_running = 0;
+    return;
 }
 
 function combine_char(pos, neg, code) {
