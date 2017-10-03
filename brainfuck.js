@@ -22,20 +22,19 @@ var g_quit_debug_run = 0;
 var g_debugging_running = 0;
 var g_prompt_for_input = 0;
 var g_running = 0;
-var g_linebreaker = "\n";
 
 var g_documentation = [
-    '>','Point to the next cell on the right.\n',
-    '<','Point to the next cell on the left.\n',
-    '+','Increment the byte at the pointer by one.\n',
-    '-','Decrement the byte at the pointer by one.\n',
-    '.','Output the value of the byte at the pointer.\n',
-    ',','Accept one byte of input, storing its value in the current cell.\n',
+    '>','Point to the next cell on the right.',
+    '<','Point to the next cell on the left.',
+    '+','Increment the byte at the pointer by one.',
+    '-','Decrement the byte at the pointer by one.',
+    '.','Output the value of the byte at the pointer.',
+    ',','Accept one byte of input, storing its value in the current cell.',
     '[','Jump forward to the command after the corresponding ]\nif the byte at the pointer is zero.',
     ']','Jump back to the command after the corresponding [\nif the byte at the pointer is nonzero.',
-    ')','Push the value at the current cell onto the stack.\n',
+    ')','Push the value at the current cell onto the stack.',
     '(','Pop the value on the stack into the current cell\n(an empty stack pops zero into the cell)',
-    '@','Copy value at the top of the stack into the current cell without popping it\n',
+    '@','Copy value at the top of the stack into the current cell without popping it',
     '$','Drop the value on the stack (as if it was popped), but do not\n write it to the cell',
     '=','Current cell is set to the SUM between its value and the value on\nthe top of the stack (peek)',
     '_','current cell is set to the DIFFERENCE between its value and the\nvalue on the top of the stack (peek)',
@@ -44,14 +43,11 @@ var g_documentation = [
     '|','Set current cell to the bitwise OR between its value and the\nvalue on the top of the stack (peek)',
     '^','Set current cell to the bitwise XOR between its value and the\nvalue on the top of the stack (peek)',
     '&','Set current cell to the bitwise AND between its value and the\nvalue on the top of the stack (peek) ',
-    '#','Stop executing until button is clicked\n',
-    '%','Clear current cell. (optimised version of \'[-]\')\n'
+    '#','Stop executing until button is clicked',
+    '%','Clear current cell. (optimised version of \'[-]\')'
 ]
 
 function init(){
-    if (navigator.userAgent.toLowerCase().indexOf("msie") != -1){
-        g_linebreaker = "\r";
-    }
 
     document.addEventListener('keypress', function(e) {
         //n for single step
@@ -61,69 +57,6 @@ function init(){
         else if (e.keyCode == 99)
             document.getElementById('button_run_debug').click();
     }, false);
-}
-
-function init_memory(){
-    for(var i=0; i<=g_max_mem; i++){
-        g_memory[i] = 0;
-    }
-    g_mempointer = 0;
-}
-
-function init_stack() {
-    g_stack.length = 0
-}
-
-function init_io(){
-    g_dp = 0;
-    g_output = '';
-}
-
-String.prototype.replaceAll = function(search, replacement) {
-    var target = this;
-    return target.split(search).join(replacement);
-};
-
-function init_prog(code){
-    g_program.length = 0;
-    for(var i=0; i<code.length; i++){
-        var op = code.charAt(i)
-        // check it's not a carriage return or anything that will
-        //  break the program viewer too badly :)
-        if (valid_ops.includes(op)){
-            g_program[g_program.length] = op;
-        }
-    }    
-    g_ip = 0;
-    init_targets();
-}
-
-function init_targets(){
-    g_targets.length = 0;
-    var temp_stack = [];
-    for(var i=0; i<g_program.length; i++){
-        var op = g_program[i];
-        if (op == '['){
-            temp_stack.push(i);
-        }
-        if (op == ']'){
-            if (temp_stack.length == 0) alert('Parseing error: ] with no matching [');
-            var target = temp_stack.pop();
-            g_targets[i] = target;
-            g_targets[target] = i;
-        }
-    }
-    if (temp_stack.length > 0) alert('Parseing error: [ with no matching ]');
-}
-
-function init_input(){
-    g_prompt_for_input = document.getElementById('input_mode_1').checked;
-    g_input.length = 0;
-    var in_data = document.getElementById('edit_input').value;
-    for(var i=0; i<in_data.length; i++){
-        g_input[g_input.length] = in_data.charAt(i);
-    }    
-    g_dp = 0;
 }
 
 function get_input(){
@@ -228,12 +161,7 @@ function bf_interpret(prog, input){
     }
     g_running = 1;
     
-    init_prog(optimise_code(prog));
-    init_memory();
-    init_stack();
-    init_io();
-    init_input();
-
+    init_elements(prog);
     disable_text_box('edit_source');
     disable_text_box('edit_input');
     disable_text_box('edit_output');
@@ -280,122 +208,6 @@ function bf_run_step(){
     }
 
     window.setTimeout('bf_run_step();', 0);
-}
-function update_stackview(){
-    var mem_slots = g_stack.length;
-
-    var line_1 = '';
-    var line_2 = '';
-    for(var i=mem_slots; i>0; i--){
-        line_1 += pad_num(g_stack[i-1], 3) + ' ';
-    }
-    if (line_1 != '') {
-        line_2 = '^'
-    }
-    set_viewdata('stackview', line_1 + g_linebreaker + line_2);
-}
-
-function update_explanation(){
-    var currentop = g_program[g_ip];
-    if (currentop == undefined){
-        set_viewdata('explanation', 'End of program');
-        return
-    }
-    for (var j = 0; j<g_documentation.length; j+=2){
-        if (g_documentation[j] == currentop){
-            set_viewdata('explanation', g_documentation[j+1]);
-            return;
-        }
-    }
-    set_viewdata('explanation', 'this shouldn\'t happen. current opcode: '+currentop);
-}
-function update_memview(){
-    var mem_slots = Math.floor(g_viewer_width / 4);
-    var pre_slots = Math.floor(mem_slots / 2);
-    var low_slot = g_mempointer - pre_slots;
-    if (low_slot < 0) low_slot += g_max_mem;
-
-    var line_1 = '';
-    for(var i=0; i<mem_slots; i++){
-        var slot = low_slot + i;
-        if (slot >= g_max_mem) slot -= g_max_mem;
-        var label = pad_num(g_memory[slot], 3);
-        line_1 += label + ' ';
-    }
-
-    var line_2 = '';
-    var line_3 = '';
-    for(var i=0; i<pre_slots; i++){
-        line_2 += '    ';
-        line_3 += '    ';
-    }
-    line_2 += '^';
-    line_3 += 'mp='+g_mempointer;
-
-    var line_4 = '';
-    for(var i=0; i<mem_slots; i++){
-        var slot = low_slot + i;
-        if (slot >= g_max_mem) slot -= g_max_mem;
-        var label = pad_num(slot, 3);
-        line_4 += label + ' ';
-    }
-
-    set_viewdata('memview', line_1 + g_linebreaker + line_2 + g_linebreaker + line_3 + g_linebreaker + line_4);
-}
-
-function pad_num(a, b){
-    var c = new String(a);
-    for(var i=c.length; i<b; i++) c = '0'+c;
-    return c;
-}
-
-function update_progview(){
-    var pre_slots = Math.floor(g_viewer_width / 2);
-    var low_slot = g_ip - pre_slots;
-
-    var line_1 = '';
-    for(var i=0; i<g_viewer_width; i++){
-        var slot = low_slot + i;
-        if ((slot >= 0) && (slot < g_program.length)){
-            line_1 += g_program[slot];
-        }else{
-            line_1 += '_';
-        }
-    }
-
-    var line_2 = '';
-    for(var i=0; i<pre_slots; i++){
-        line_2 += ' ';
-    }
-    line_2 += '^';
-
-    var line_3 = '';
-    for(var i=0; i<pre_slots; i++){
-        line_3 += ' ';
-    }
-    line_3 += 'ip='+g_ip;
-
-    set_viewdata('progview', line_1 + g_linebreaker + line_2 + g_linebreaker + line_3);
-}
-
-function update_inputview(){
-    if (g_prompt_for_input){
-        set_viewdata('inputview', "-input prompt mode-");
-    }else{
-        var line_1 = g_input.join('');
-        var line_2 = '';
-        for (var i=0; i<g_dp; i++) line_2 += ' ';
-        line_2 += '^';
-        set_viewdata('inputview', line_1 + g_linebreaker + line_2);
-    }
-}
-
-function update_outputview(){
-    var line_1 = g_output;
-    var line_2 = '';
-    for (var i=0; i<g_output.length; i++) line_2 += ' ';
-    line_2 += '^';
-    set_viewdata('outputview', line_1 + g_linebreaker + line_2);
 }
 
 function set_viewdata(view, data){
@@ -449,12 +261,125 @@ function debug_toggle(f){
     }
 }
 
-function start_debugger(){
-    init_memory();
-    init_stack();
-    init_io();
-    init_prog(optimise_code(document.getElementById('edit_source').value));
-    init_input();
+
+function update_memview(){
+    var mem_slots = Math.floor(g_viewer_width / 4);
+    var pre_slots = Math.floor(mem_slots / 2);
+    var low_slot = g_mempointer - pre_slots;
+    if (low_slot < 0) low_slot += g_max_mem;
+
+    var line_1 = '';
+    for(var i=0; i<mem_slots; i++){
+        var slot = low_slot + i;
+        if (slot >= g_max_mem) slot -= g_max_mem;
+        var label = pad_num(g_memory[slot], 3);
+        line_1 += label + ' ';
+    }
+
+    var line_2 = '';
+    var line_3 = '';
+    for(var i=0; i<pre_slots; i++){
+        line_2 += '    ';
+        line_3 += '    ';
+    }
+    line_2 += '^';
+    line_3 += 'mp='+g_mempointer;
+
+    var line_4 = '';
+    for(var i=0; i<mem_slots; i++){
+        var slot = low_slot + i;
+        if (slot >= g_max_mem) slot -= g_max_mem;
+        var label = pad_num(slot, 3);
+        line_4 += label + ' ';
+    }
+
+    set_viewdata('memview', line_1 + '\r\n' + line_2 + '\r\n' + line_3 + '\r\n' + line_4);
+}
+
+function update_stackview(){
+    var mem_slots = g_stack.length;
+
+    var line_1 = '';
+    var line_2 = '';
+    for(var i=mem_slots; i>0; i--){
+        line_1 += pad_num(g_stack[i-1], 3) + ' ';
+    }
+    if (line_1 != '') {
+        line_2 = '^'
+    }
+    set_viewdata('stackview', line_1 + '\r\n' + line_2);
+}
+
+function update_explanation(){
+    var currentop = g_program[g_ip];
+    if (currentop == undefined){
+        set_viewdata('explanation', 'End of program');
+        return
+    }
+    for (var j = 0; j<g_documentation.length; j+=2){
+        if (g_documentation[j] == currentop){
+            set_viewdata('explanation', g_documentation[j+1]+'\r\n');
+            return;
+        }
+    }
+    set_viewdata('explanation', 'this shouldn\'t happen. current opcode: '+currentop);
+}
+function pad_num(a, b){
+    var c = new String(a);
+    for(var i=c.length; i<b; i++) c = '0'+c;
+    return c;
+}
+
+function update_progview(){
+    var pre_slots = Math.floor(g_viewer_width / 2);
+    var low_slot = g_ip - pre_slots;
+
+    var line_1 = '';
+    for(var i=0; i<g_viewer_width; i++){
+        var slot = low_slot + i;
+        if ((slot >= 0) && (slot < g_program.length)){
+            line_1 += g_program[slot];
+        }else{
+            line_1 += '_';
+        }
+    }
+
+    var line_2 = '';
+    for(var i=0; i<pre_slots; i++){
+        line_2 += ' ';
+    }
+    line_2 += '^';
+
+    var line_3 = '';
+    for(var i=0; i<pre_slots; i++){
+        line_3 += ' ';
+    }
+    line_3 += 'ip='+g_ip;
+
+    set_viewdata('progview', line_1 + '\r\n' + line_2 + '\r\n' + line_3);
+}
+
+function update_inputview(){
+    if (g_prompt_for_input){
+        set_viewdata('inputview', "-input prompt mode-");
+    }else{
+        var line_1 = g_input.join('');
+        var line_2 = '';
+        for (var i=0; i<g_dp; i++) line_2 += ' ';
+        line_2 += '^';
+        set_viewdata('inputview', line_1 + '\r\n' + line_2);
+    }
+}
+
+function update_outputview(){
+    var line_1 = g_output;
+    var line_2 = '';
+    for (var i=0; i<g_output.length; i++) line_2 += ' ';
+    line_2 += '^';
+    set_viewdata('outputview', line_1 + '\r\n' + line_2);
+}
+
+function update(){
     update_memview();
     update_explanation();
     update_stackview();
@@ -463,17 +388,62 @@ function start_debugger(){
     update_outputview();
 }
 
+function init_elements(prog){
+    for(var i=0; i<=g_max_mem; i++){
+        g_memory[i] = 0;
+    }
+    g_mempointer = 0;
+    g_stack.length = 0;
+    g_output = '';
+    
+    prog = optimise_code(prog);
+    
+    g_program.length = 0;
+    for(var i=0; i<prog.length; i++){
+        var op = prog.charAt(i)
+        // check it's not a carriage return or anything that will
+        //  break the program viewer too badly :)
+        if (valid_ops.includes(op)){
+            g_program[g_program.length] = op;
+        }
+    }    
+    g_ip = 0;
+    g_targets.length = 0;
+    var temp_stack = [];
+    for(var i=0; i<g_program.length; i++){
+        var op = g_program[i];
+        if (op == '['){
+            temp_stack.push(i);
+        }
+        if (op == ']'){
+            if (temp_stack.length == 0) alert('Parsing error: ] with no matching [');
+            var target = temp_stack.pop();
+            g_targets[i] = target;
+            g_targets[target] = i;
+        }
+    }
+    if (temp_stack.length > 0) alert('Parseing error: [ with no matching ]');
+    
+    
+    g_prompt_for_input = document.getElementById('input_mode_1').checked;
+    g_input.length = 0;
+    var in_data = document.getElementById('edit_input').value;
+    for(var i=0; i<in_data.length; i++){
+        g_input[g_input.length] = in_data.charAt(i);
+    }    
+    g_dp = 0;
+}
+
+function start_debugger(){
+    init_elements(document.getElementById('edit_source').value);
+    update();
+}
+
 function run_step(){
     var op = g_program[g_ip];
     execute_opcode(op);
     g_ip++;
-    update_memview();
-    update_explanation();
-    update_stackview();
-    update_progview();
-    update_inputview();
-    update_outputview();
-    
+    update()
     if (g_ip >= g_program.length){
         debug_done();
         //alert("done!");
@@ -506,11 +476,12 @@ function run_debug(){
 
 function run_debug_step(){
     run_step();
-    if ((g_program[g_ip] == '#') || g_quit_debug_run || (g_ip >= g_program.length)){
+    if ((g_program[g_ip] == '#') || g_quit_debug_run){
         stop_debug_run();
-        if (g_ip >= g_program.length){
-            debug_done();
-        }
+        return;
+    }
+    else if (g_ip >= g_program.length){
+        debug_done();
         return;
     }
     window.setTimeout('run_debug_step();', 0);
@@ -537,7 +508,11 @@ function combine_char(pos, neg, code) {
         return Array(-sum + 1).join(neg);
     }
 }
-        
+
+String.prototype.replaceAll = function(search, replacement) {
+    return this.split(search).join(replacement);
+};
+
 function optimise_code(code){
     code = code.replaceAll('[-]','%').replaceAll('[]','').replaceAll(' ','').replaceAll('\n','').replaceAll('\r','');
     // remove useless +- and <> combinations
@@ -559,18 +534,15 @@ function enable_text_box(name){
 }
 
 function disable_button(name){
-    var elm = document.getElementById(name);
-    elm.disabled = true;
+    document.getElementById(name).disabled = true;
 }
 
 function enable_button(name){
-    var elm = document.getElementById(name);
-    elm.disabled = false;
+    document.getElementById(name).disabled = false;
 }
 
 function change_button_caption(name, caption){
-    var elm = document.getElementById(name);
-    elm.value = caption;
+    document.getElementById(name).value = caption;
 }
 
 function sync_input(){
