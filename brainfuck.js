@@ -4,7 +4,7 @@
 // #97   decimal char index
 // !141  octal char index
 // $61   hex char index
-var valid_ops = ['>','<','+','-','.',',','[',']',')','(','@','$','=','_','}','{','|','^','&','#','%']
+var valid_ops = ['>','<','+','-','.',',','[',']',')','(','@','$','=','_','}','{','|','^','&','#','%'];
 var g_debugging = 0;
 var g_memory = [];
 var g_stack = [];
@@ -24,31 +24,30 @@ var g_prompt_for_input = 0;
 var g_running = 0;
 
 var g_documentation = [
-    '>','Point to the next cell on the right.',
-    '<','Point to the next cell on the left.',
-    '+','Increment the byte at the pointer by one.',
-    '-','Decrement the byte at the pointer by one.',
-    '.','Output the value of the byte at the pointer.',
-    ',','Accept one byte of input, storing its value in the current cell.',
-    '[','Jump forward to the command after the corresponding ]\nif the byte at the pointer is zero.',
-    ']','Jump back to the command after the corresponding [\nif the byte at the pointer is nonzero.',
-    ')','Push the value at the current cell onto the stack.',
-    '(','Pop the value on the stack into the current cell\n(an empty stack pops zero into the cell)',
-    '@','Copy value at the top of the stack into the current cell without popping it',
-    '$','Drop the value on the stack (as if it was popped), but do not\n write it to the cell',
-    '=','Current cell is set to the SUM between its value and the value on\nthe top of the stack (peek)',
-    '_','current cell is set to the DIFFERENCE between its value and the\nvalue on the top of the stack (peek)',
-    '}','Bitshift the current cell value right by the value on the top of\n the stack (peek)',
-    '{','Bitshift the current cell value left by the value on the top of\nthe stack (peek)',
-    '|','Set current cell to the bitwise OR between its value and the\nvalue on the top of the stack (peek)',
-    '^','Set current cell to the bitwise XOR between its value and the\nvalue on the top of the stack (peek)',
-    '&','Set current cell to the bitwise AND between its value and the\nvalue on the top of the stack (peek) ',
-    '#','Stop executing until button is clicked',
-    '%','Clear current cell. (optimised version of \'[-]\')'
-]
+    'Point to the next cell on the right.\r\n',
+    'Point to the next cell on the left.\r\n',
+    'Increment the byte at the pointer by one.\r\n',
+    'Decrement the byte at the pointer by one.\r\n',
+    'Output the value of the byte at the pointer.\r\n',
+    'Accept one byte of input, storing its value in the current cell.\r\n',
+    'Jump forward to the command after the corresponding ]\nif the byte at the pointer is zero.',
+    'Jump back to the command after the corresponding [\nif the byte at the pointer is nonzero.',
+    'Push the value at the current cell onto the stack.\r\n',
+    'Pop the value on the stack into the current cell\n(an empty stack pops zero into the cell)',
+    'Copy value at the top of the stack into the current cell without popping it\r\n',
+    'Drop the value on the stack (as if it was popped), but do not\n write it to the cell',
+    'Current cell is set to the SUM between its value and the value on\nthe top of the stack (peek)',
+    'current cell is set to the DIFFERENCE between its value and the\nvalue on the top of the stack (peek)',
+    'Bitshift the current cell value right by the value on the top of\n the stack (peek)',
+    'Bitshift the current cell value left by the value on the top of\nthe stack (peek)',
+    'Set current cell to the bitwise OR between its value and the\nvalue on the top of the stack (peek)',
+    'Set current cell to the bitwise XOR between its value and the\nvalue on the top of the stack (peek)',
+    'Set current cell to the bitwise AND between its value and the\nvalue on the top of the stack (peek) ',
+    'Stop executing until button is clicked\r\n',
+    'Clear current cell. (optimised version of \'[-]\')\r\n'
+];
 
 function init(){
-
     document.addEventListener('keypress', function(e) {
         //n for single step
         if (e.keyCode == 110)
@@ -80,9 +79,6 @@ function get_input(){
     }
 }
 
-function put_output(c){
-    g_output += c;
-}
 
 function execute_opcode(op){
     switch(op){
@@ -109,7 +105,7 @@ function execute_opcode(op){
             g_ip = g_targets[g_ip] - 1;
             break;
         case '.':
-            put_output(String.fromCharCode(g_memory[g_mempointer]));
+            g_output += String.fromCharCode(g_memory[g_mempointer]);
             break;
         case ',':
             g_memory[g_mempointer] = get_input();
@@ -133,10 +129,10 @@ function execute_opcode(op){
             g_memory[g_mempointer] -= g_stack[g_stack.length-1];
             break;
         case '}':
-            g_memory[g_mempointer] >>= g_stack[g_stack.length-1]
+            g_memory[g_mempointer] >>= g_stack[g_stack.length-1];
             break;
         case '{':
-            g_memory[g_mempointer] <<= g_stack[g_stack.length-1]
+            g_memory[g_mempointer] <<= g_stack[g_stack.length-1];
             break;
         case '|':
             g_memory[g_mempointer] |= g_stack[g_stack.length-1];
@@ -188,11 +184,6 @@ function bf_stop_run(){
     g_running = 0;
 }
 
-function bf_run_done(){
-    bf_stop_run();
-    document.getElementById('edit_output').value = g_output;
-}
-
 function bf_run_step(){
     // execute instrcution under ip
     var op = g_program[g_ip];
@@ -203,26 +194,18 @@ function bf_run_step(){
     g_ip++;
 
     if (g_ip >= g_program.length){
-        bf_run_done();
+        bf_stop_run();
+        document.getElementById('edit_output').value = g_output;
         return;
     }
 
-    window.setTimeout('bf_run_step();', 0);
+    window.setTimeout(bf_run_step(), 0);
 }
 
 function set_viewdata(view, data){
     var new_node = document.createTextNode(data);
     var p_node = document.getElementById(view);
     p_node.replaceChild(new_node, p_node.childNodes[0]);
-}
-
-function run(f){
-    bf_interpret(f.source.value, f.input.value);
-}
-
-function debug_done(){
-    disable_button('button_step');
-    disable_button('button_run_debug');    
 }
 
 function debug_toggle(f){
@@ -257,7 +240,8 @@ function debug_toggle(f){
         change_button_caption('button_debug', 'Quit Debugger');
         enable_button('button_step');
         enable_button('button_run_debug');
-        start_debugger();
+        init_elements(document.getElementById('edit_source').value);
+        update();
     }
 }
 
@@ -269,43 +253,32 @@ function update_memview(){
     if (low_slot < 0) low_slot += g_max_mem;
 
     var line_1 = '';
-    for(var i=0; i<mem_slots; i++){
-        var slot = low_slot + i;
-        if (slot >= g_max_mem) slot -= g_max_mem;
-        var label = pad_num(g_memory[slot], 3);
-        line_1 += label + ' ';
-    }
-
-    var line_2 = '';
-    var line_3 = '';
-    for(var i=0; i<pre_slots; i++){
-        line_2 += '    ';
-        line_3 += '    ';
-    }
-    line_2 += '^';
-    line_3 += 'mp='+g_mempointer;
-
     var line_4 = '';
     for(var i=0; i<mem_slots; i++){
         var slot = low_slot + i;
         if (slot >= g_max_mem) slot -= g_max_mem;
-        var label = pad_num(slot, 3);
-        line_4 += label + ' ';
+        var label1 = pad_num(g_memory[slot]);
+        line_1 += label1 + ' ';
+        var label4 = pad_num(slot);
+        line_4 += label4 + ' ';
     }
+    
+    var line_3 = '';
+    var line_2 = line_3 = '    '.repeat(pre_slots);
+    line_2 += '^';
+    line_3 += 'mp='+g_mempointer;
 
     set_viewdata('memview', line_1 + '\r\n' + line_2 + '\r\n' + line_3 + '\r\n' + line_4);
 }
 
 function update_stackview(){
-    var mem_slots = g_stack.length;
-
     var line_1 = '';
     var line_2 = '';
-    for(var i=mem_slots; i>0; i--){
-        line_1 += pad_num(g_stack[i-1], 3) + ' ';
+    for(var i=g_stack.length; i>0; i--){
+        line_1 += pad_num(g_stack[i-1]) + ' ';
     }
     if (line_1 != '') {
-        line_2 = '^'
+        line_2 = '^';
     }
     set_viewdata('stackview', line_1 + '\r\n' + line_2);
 }
@@ -314,20 +287,13 @@ function update_explanation(){
     var currentop = g_program[g_ip];
     if (currentop == undefined){
         set_viewdata('explanation', 'End of program');
-        return
+        return;
     }
-    for (var j = 0; j<g_documentation.length; j+=2){
-        if (g_documentation[j] == currentop){
-            set_viewdata('explanation', g_documentation[j+1]+'\r\n');
-            return;
-        }
-    }
-    set_viewdata('explanation', 'this shouldn\'t happen. current opcode: '+currentop);
+    set_viewdata('explanation', g_documentation[valid_ops.indexOf(currentop)]);
 }
-function pad_num(a, b){
-    var c = new String(a);
-    for(var i=c.length; i<b; i++) c = '0'+c;
-    return c;
+
+function pad_num(str) {
+    return ('000' + str).slice(-3);
 }
 
 function update_progview(){
@@ -343,40 +309,30 @@ function update_progview(){
             line_1 += '_';
         }
     }
-
-    var line_2 = '';
-    for(var i=0; i<pre_slots; i++){
-        line_2 += ' ';
-    }
-    line_2 += '^';
-
     var line_3 = '';
-    for(var i=0; i<pre_slots; i++){
-        line_3 += ' ';
-    }
+    var line_2 = line_3 = ' '.repeat(pre_slots);
+    line_2 += '^';
     line_3 += 'ip='+g_ip;
 
     set_viewdata('progview', line_1 + '\r\n' + line_2 + '\r\n' + line_3);
 }
 
 function update_inputview(){
-    if (g_prompt_for_input){
-        set_viewdata('inputview', "-input prompt mode-");
-    }else{
-        var line_1 = g_input.join('');
-        var line_2 = '';
-        for (var i=0; i<g_dp; i++) line_2 += ' ';
-        line_2 += '^';
-        set_viewdata('inputview', line_1 + '\r\n' + line_2);
+    if(!g_prompt_for_input){
+        var input_locator = '';
+        for (var i=0; i<g_dp; i++) input_locator += ' ';
+        input_locator += '^';
+        set_viewdata('inputview', g_input.join('') + '\r\n' + input_locator);
+        return;
     }
+    set_viewdata('inputview', "-input prompt mode-");
 }
 
 function update_outputview(){
-    var line_1 = g_output;
-    var line_2 = '';
-    for (var i=0; i<g_output.length; i++) line_2 += ' ';
-    line_2 += '^';
-    set_viewdata('outputview', line_1 + '\r\n' + line_2);
+    var output_locator = '';
+    for (var i=0; i<g_output.length; i++) output_locator += ' ';
+    output_locator += '^';
+    set_viewdata('outputview', g_output + '\r\n' + output_locator);
 }
 
 function update(){
@@ -395,80 +351,63 @@ function init_elements(prog){
     g_mempointer = 0;
     g_stack.length = 0;
     g_output = '';
-    
-    prog = optimise_code(prog);
-    
+    prog = prog.replaceAll('[-]','%').replaceAll('[]','').replaceAll(' ','').replaceAll('\n','').replaceAll('\r','');
+    // remove useless +- and <> combinations
+    prog = prog.replace(/[\+\-]*(?:\+-|-\+)[\+\-]*/g,combine_char.bind(this, "+", "-"));
+    prog = prog.replace(/[<>]*(?:<>|><)[<>]*/g,combine_char.bind(this, "<", ">"));    
     g_program.length = 0;
-    for(var i=0; i<prog.length; i++){
-        var op = prog.charAt(i)
-        // check it's not a carriage return or anything that will
-        //  break the program viewer too badly :)
-        if (valid_ops.includes(op)){
-            g_program[g_program.length] = op;
-        }
-    }    
     g_ip = 0;
     g_targets.length = 0;
     var temp_stack = [];
-    for(var i=0; i<g_program.length; i++){
-        var op = g_program[i];
-        if (op == '['){
-            temp_stack.push(i);
+    for(i=0; i<prog.length; i++){
+        var op = prog.charAt(i);
+        // check it's not a carriage return or anything that will
+        //  break the program viewer too badly :)
+        if (valid_ops.includes(op)){
+            
+            g_program[g_program.length] = op;
+            if (op == '['){
+                temp_stack.push(i);
+            }
+            if (op == ']'){
+                if (temp_stack.length == 0) alert('Parsing error: ] with no matching [');
+                var target = temp_stack.pop();
+                g_targets[i] = target;
+                g_targets[target] = i;
+            }
         }
-        if (op == ']'){
-            if (temp_stack.length == 0) alert('Parsing error: ] with no matching [');
-            var target = temp_stack.pop();
-            g_targets[i] = target;
-            g_targets[target] = i;
-        }
-    }
+    }    
+
     if (temp_stack.length > 0) alert('Parseing error: [ with no matching ]');
     
     
     g_prompt_for_input = document.getElementById('input_mode_1').checked;
     g_input.length = 0;
     var in_data = document.getElementById('edit_input').value;
-    for(var i=0; i<in_data.length; i++){
+    for(i=0; i<in_data.length; i++){
         g_input[g_input.length] = in_data.charAt(i);
     }    
     g_dp = 0;
 }
 
-function start_debugger(){
-    init_elements(document.getElementById('edit_source').value);
-    update();
-}
-
 function run_step(){
-    var op = g_program[g_ip];
-    execute_opcode(op);
+    execute_opcode(g_program[g_ip]);
     g_ip++;
-    update()
+    update();
     if (g_ip >= g_program.length){
-        debug_done();
-        //alert("done!");
+        disable_button('button_step');
+        disable_button('button_run_debug');
     }
-}
-
-function start_debug_run(){
-    disable_button('button_debug');
-    disable_button('button_step');
-    change_button_caption('button_run_debug', 'Stop Running (c)');
-    g_debugging_running = 1;
-}
-
-function stop_debug_run(){
-    enable_button('button_debug');
-    enable_button('button_step');
-    change_button_caption('button_run_debug', 'Run To Breakpoint (c)');
-    g_debugging_running = 0;
 }
 
 function run_debug(){
     if (g_debugging_running){
         g_quit_debug_run = 1;
     }else{
-        start_debug_run();
+        disable_button('button_debug');
+        disable_button('button_step');
+        change_button_caption('button_run_debug', 'Stop Running (c)');
+        g_debugging_running = 1;
         g_quit_debug_run = 0;
         run_debug_step();
     }
@@ -476,15 +415,14 @@ function run_debug(){
 
 function run_debug_step(){
     run_step();
-    if ((g_program[g_ip] == '#') || g_quit_debug_run){
-        stop_debug_run();
+    if ((g_program[g_ip] == '#') || g_quit_debug_run || g_ip >= g_program.length){
+        enable_button('button_debug');
+        enable_button('button_step');
+        change_button_caption('button_run_debug', 'Run To Breakpoint (c)');
+        g_debugging_running = 0;
         return;
     }
-    else if (g_ip >= g_program.length){
-        debug_done();
-        return;
-    }
-    window.setTimeout('run_debug_step();', 0);
+    window.setTimeout(run_debug_step(), 0);
 }
 
 function combine_char(pos, neg, code) {
@@ -512,14 +450,6 @@ function combine_char(pos, neg, code) {
 String.prototype.replaceAll = function(search, replacement) {
     return this.split(search).join(replacement);
 };
-
-function optimise_code(code){
-    code = code.replaceAll('[-]','%').replaceAll('[]','').replaceAll(' ','').replaceAll('\n','').replaceAll('\r','');
-    // remove useless +- and <> combinations
-    code = code.replace(/[\+\-]*(?:\+-|-\+)[\+\-]*/g,combine_char.bind(this, "+", "-"));
-    code = code.replace(/[<>]*(?:<>|><)[<>]*/g,combine_char.bind(this, "<", ">"));
-    return code
-}
 
 function disable_text_box(name){
     var elm = document.getElementById(name);
