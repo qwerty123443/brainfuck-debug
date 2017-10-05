@@ -36,7 +36,7 @@ var g_documentation = [
     'Pop the value on the stack into the current cell\n(an empty stack pops zero into the cell)',
     'Copy value at the top of the stack into the current cell without popping it\r\n',
     'Drop the value on the stack (as if it was popped), but do not\n write it to the cell',
-    'Current cell is set to the SUM between its value and the value on\nthe top of the stack (peek)',
+    'Current cell is set to the SUM between its value and the value \non the top of the stack (peek)',
     'current cell is set to the DIFFERENCE between its value and the\nvalue on the top of the stack (peek)',
     'Bitshift the current cell value right by the value on the top of\n the stack (peek)',
     'Bitshift the current cell value left by the value on the top of\nthe stack (peek)',
@@ -197,9 +197,7 @@ function bf_run_step(){
 }
 
 function set_viewdata(view, data){
-    var new_node = document.createTextNode(data);
-    var p_node = document.getElementById(view);
-    p_node.replaceChild(new_node, p_node.childNodes[0]);
+    document.getElementById(view).innerText = data
 }
 
 function debug_toggle(f){
@@ -408,10 +406,13 @@ function run_debug(){
 }
 
 function run_debug_step(){
-    while (g_program[g_ip] != '#' && !g_quit_debug_run && g_ip < g_program.length){
-        run_step();
+    function step() {
+    	if (g_program[g_ip] != '#' && !g_quit_debug_run && g_ip < g_program.length) {
+    		run_step();
+    		requestAnimationFrame(step);
+    	}
     }
-    g_ip++;
+    requestAnimationFrame(step);
     enable_button('button_debug');
     enable_button('button_step');
     change_button_caption('button_run_debug', 'Run To Breakpoint (c)');
